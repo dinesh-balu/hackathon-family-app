@@ -1,0 +1,69 @@
+# Dockerfile for Android development with emulator support
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/cmdline-tools/latest/bin
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    unzip \
+    git \
+    openjdk-11-jdk \
+    qemu-kvm \
+    libvirt-daemon-system \
+    libvirt-clients \
+    bridge-utils \
+    cpu-checker \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Create android-sdk directory
+RUN mkdir -p ${ANDROID_HOME}
+
+# Download and install Android SDK command line tools
+RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip \
+    && unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_HOME} \
+    && mv ${ANDROID_HOME}/cmdline-tools ${ANDROID_HOME}/cmdline-tools-temp \
+    && mkdir -p ${ANDROID_HOME}/cmdline-tools/latest \
+    && mv ${ANDROID_HOME}/cmdline-tools-temp/* ${ANDROID_HOME}/cmdline-tools/latest/ \
+    && rm -rf ${ANDROID_HOME}/cmdline-tools-temp /tmp/cmdline-tools.zip
+
+# Accept Android SDK licenses
+RUN yes | sdkmanager --licenses
+
+# Install Android SDK components
+RUN sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0" "system-images;android-33;google_apis;x86_64"
+
+# Create AVD
+RUN echo "no" | avdmanager create avd -n test_avd -k "system-images;android-33;google_apis;x86_64" --force
+
+# Set working directory
+WORKDIR /app
+
+# Install Expo CLI
+RUN npm install -g @expo/cli
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose ports
+EXPOSE 8081 19000 19001 19002 5554 5555
+
+# Start script
+COPY docker-start-android.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-start-android.sh
+
+CMD ["/usr/local/bin/docker-start-android.sh"]
