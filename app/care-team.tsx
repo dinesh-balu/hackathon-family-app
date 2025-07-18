@@ -1,10 +1,11 @@
-import React from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Linking } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Linking, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Text, View } from '@/components/Themed';
+import { apiService, CareTeamMember } from '@/services/api';
 
-interface CareTeamMember {
+interface CareTeamMemberWithUI {
   id: string;
   name: string;
   role: string;
@@ -15,35 +16,59 @@ interface CareTeamMember {
 }
 
 export default function CareTeamScreen() {
-  const careTeamMembers: CareTeamMember[] = [
-    {
-      id: '1',
-      name: 'Jonathan Myers',
-      role: 'Supervising Clinician',
-      phone: '313-204-1212',
-      email: 'jonathan.myers@example.com',
-      initials: 'JM',
-      avatarColor: '#87CEEB',
-    },
-    {
-      id: '2',
-      name: 'Alice Brown',
-      role: 'Operations Director',
-      phone: '313-204-1212',
-      email: 'alice.brown@example.com',
-      initials: 'AB',
-      avatarColor: '#F5C6CB',
-    },
-    {
-      id: '3',
-      name: 'Thomas Smith',
-      role: 'Patient Coordinator',
-      phone: '313-204-1212',
-      email: 'thomas.smith@example.com',
-      initials: 'TS',
-      avatarColor: '#8B5CF6',
-    },
-  ];
+  const [careTeam, setCareTeam] = useState<CareTeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCareTeam();
+  }, []);
+
+  const loadCareTeam = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getCareTeam();
+      setCareTeam(data);
+    } catch (error) {
+      console.error('Failed to load care team:', error);
+      setCareTeam([
+        {
+          id: 1,
+          name: 'Jonathan Myers',
+          role: 'Supervising Clinician',
+          email: 'jonathan.myers@example.com',
+          phone: '313-204-1212',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          name: 'Alice Brown',
+          role: 'Operations Director',
+          email: 'alice.brown@example.com',
+          phone: '313-204-1212',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 3,
+          name: 'Thomas Smith',
+          role: 'Patient Coordinator',
+          email: 'thomas.smith@example.com',
+          phone: '313-204-1212',
+          createdAt: new Date().toISOString()
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getAvatarColor = (index: number) => {
+    const colors = ['#87CEEB', '#F5C6CB', '#8B5CF6'];
+    return colors[index % colors.length];
+  };
 
   const handlePhoneCall = (phone: string) => {
     Linking.openURL(`tel:${phone}`);
@@ -64,37 +89,46 @@ export default function CareTeamScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {careTeamMembers.map((member) => (
-          <View key={member.id} style={styles.memberCard}>
-            <View style={styles.memberInfo}>
-              <View style={[styles.avatar, { backgroundColor: member.avatarColor }]}>
-                <Text style={styles.avatarText}>{member.initials}</Text>
-              </View>
-              
-              <View style={styles.memberDetails}>
-                <Text style={styles.memberName}>{member.name}</Text>
-                <View style={styles.roleBadge}>
-                  <Text style={styles.roleBadgeText}>{member.role}</Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4A90E2" />
+            <Text style={styles.loadingText}>Loading care team...</Text>
+          </View>
+        ) : (
+          careTeam.map((member, index) => (
+            <View key={member.id} style={styles.memberCard}>
+              <View style={styles.memberInfo}>
+                <View style={[styles.avatar, { backgroundColor: getAvatarColor(index) }]}>
+                  <Text style={styles.avatarText}>{getInitials(member.name)}</Text>
                 </View>
                 
-                <TouchableOpacity 
-                  style={styles.phoneContainer}
-                  onPress={() => handlePhoneCall(member.phone)}
-                >
-                  <Ionicons name="call-outline" size={16} color="#666" />
-                  <Text style={styles.phoneText}>{member.phone}</Text>
-                </TouchableOpacity>
+                <View style={styles.memberDetails}>
+                  <Text style={styles.memberName}>{member.name}</Text>
+                  <View style={styles.roleBadge}>
+                    <Text style={styles.roleBadgeText}>{member.role}</Text>
+                  </View>
+                  
+                  {member.phone && (
+                    <TouchableOpacity 
+                      style={styles.phoneContainer}
+                      onPress={() => handlePhoneCall(member.phone!)}
+                    >
+                      <Ionicons name="call-outline" size={16} color="#666" />
+                      <Text style={styles.phoneText}>{member.phone}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
+              
+              <TouchableOpacity 
+                style={styles.emailButton}
+                onPress={() => handleSendEmail(member.email)}
+              >
+                <Text style={styles.emailButtonText}>Send Email</Text>
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.emailButton}
-              onPress={() => handleSendEmail(member.email)}
-            >
-              <Text style={styles.emailButtonText}>Send Email</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -136,10 +170,21 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
   },
   memberInfo: {
     flexDirection: 'row',
