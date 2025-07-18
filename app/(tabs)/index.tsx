@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { Text, View } from '@/components/Themed';
 
 export default function HomeScreen() {
@@ -57,7 +58,7 @@ export default function HomeScreen() {
         {/* Daily Session Recap */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Daily Session Recap</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/session-recap')}>
             <Text style={styles.viewDetailsLink}>View Details</Text>
           </TouchableOpacity>
         </View>
@@ -118,13 +119,13 @@ export default function HomeScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsGrid}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/care-team')}>
             <Ionicons name="people-outline" size={24} color="#4A90E2" />
             <Text style={styles.actionButtonText}>My Care Team</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="card-outline" size={24} color="#4A90E2" />
-            <Text style={styles.actionButtonText}>Insurance & Billing</Text>
+            <Text style={styles.actionButtonText}>Insurance &amp; Billing</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="chatbubble-outline" size={24} color="#4A90E2" />
