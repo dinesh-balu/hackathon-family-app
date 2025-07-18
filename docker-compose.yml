@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Web development service
+  expo-web:
+    build: .
+    ports:
+      - "8081:8081"   # Expo dev server
+      - "19000:19000" # Expo dev tools
+      - "19001:19001" # Expo dev tools
+      - "19002:19002" # Expo web
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=localhost
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+    stdin_open: true
+    tty: true
+    command: npx expo start --web --host localhost
+
+  # Android development service (requires privileged mode for emulator)
+  expo-android:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    ports:
+      - "8081:8081"   # Expo dev server
+      - "19000:19000" # Expo dev tools
+      - "19001:19001" # Expo dev tools
+      - "19002:19002" # Expo web
+      - "5554:5554"   # Android emulator console
+      - "5555:5555"   # Android emulator ADB
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=localhost
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+      - ANDROID_HOME=/opt/android-sdk
+    privileged: true
+    stdin_open: true
+    tty: true
+    profiles:
+      - android
