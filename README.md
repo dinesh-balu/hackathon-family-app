@@ -30,34 +30,6 @@ This repository contains the code for a React Native mobile application designed
 *   **Interactive Elements:** `TouchableOpacity` for buttons, external linking for calls/emails.
 *   **Reusable Components:** Emphasis on modular UI components (e.g., `CareTeamMemberCard`).
 
----
-
-## 🛠️ Installation & Setup (Local Development)
-
-To run this project locally, follow these steps:
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [repository-url]
-    cd [repository-name]
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-
-3.  **Start the Expo development server:**
-    ```bash
-    npx expo start
-    ```
-
-    This will open the Expo Dev Tools in your browser. You can then:
-    *   Scan the QR code with the Expo Go app on your physical device.
-    *   Press 'i' for iOS simulator.
-    *   Press 'a' for Android emulator.
 
 ## 📱 Screen-Specific Requirements
 
@@ -71,6 +43,8 @@ Provides a quick overview and access to core functionalities.
 *   **Daily Session Recap:** Summary of the latest session including Mood Score (e.g., `08/15` with emoji), Progress Summary (e.g., `Moderate` progress), Meals Info, Items to Bring checklist, and "Updated today" timestamp. Includes a "View Details" link to the Daily Session Recap Details screen.
 *   **Bottom Navigation Bar:** Home (active), Calendar, Messages (with notification dot), Settings.
 *   **Quick Access Tiles:** Links to "My Care Team", "Insurance & Billing", "Leave Feedback".
+
+
 
 ### 2. Daily Session Recap Details Screen
 
