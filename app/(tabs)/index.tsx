@@ -1,18 +1,35 @@
-import React from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Text, View } from '@/components/Themed';
+import { apiService, TherapySession, Child } from '@/services/api';
 
 export default function HomeScreen() {
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  const [todaySessions, setTodaySessions] = useState<TherapySession[]>([]);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState('Jared');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [sessionsData, childrenData] = await Promise.all([
+        apiService.getTodaySessions(),
+        apiService.getChildren()
+      ]);
+      setTodaySessions(sessionsData);
+      setChildren(childrenData);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,18 +37,24 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Home</Text>
-          <Text style={styles.headerDate}>{currentDate}</Text>
+          <Text style={styles.headerDate}>June 05, 2025, 18:25 PM</Text>
         </View>
 
         {/* User Selection Pills */}
         <View style={styles.userPillsContainer}>
-          <TouchableOpacity style={[styles.userPill, styles.activeUserPill]}>
-            <Text style={styles.userPillTextActive}>J</Text>
-            <Text style={styles.userPillNameActive}>Jared</Text>
+          <TouchableOpacity 
+            style={[styles.userPill, selectedUser === 'Jared' && styles.activeUserPill]}
+            onPress={() => setSelectedUser('Jared')}
+          >
+            <Text style={selectedUser === 'Jared' ? styles.userPillTextActive : styles.userPillText}>J</Text>
+            <Text style={selectedUser === 'Jared' ? styles.userPillNameActive : styles.userPillName}>Jared</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.userPill}>
-            <Text style={styles.userPillText}>M</Text>
-            <Text style={styles.userPillName}>Meredith</Text>
+          <TouchableOpacity 
+            style={[styles.userPill, selectedUser === 'Meredith' && styles.activeUserPill]}
+            onPress={() => setSelectedUser('Meredith')}
+          >
+            <Text style={selectedUser === 'Meredith' ? styles.userPillTextActive : styles.userPillText}>M</Text>
+            <Text style={selectedUser === 'Meredith' ? styles.userPillNameActive : styles.userPillName}>Meredith</Text>
           </TouchableOpacity>
         </View>
 
@@ -128,7 +151,7 @@ export default function HomeScreen() {
             <Text style={styles.actionButtonText}>Insurance &amp; Billing</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="chatbubble-outline" size={24} color="#4A90E2" />
+            <Ionicons name="add-outline" size={24} color="#4A90E2" />
             <Text style={styles.actionButtonText}>Leave Feedback</Text>
           </TouchableOpacity>
         </View>
@@ -200,15 +223,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   nextSessionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#E8F5E8',
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   nextSessionHeader: {
     flexDirection: 'row',
@@ -272,16 +292,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   statCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#E8F4FD',
     borderRadius: 12,
     padding: 16,
     width: '48%',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   statHeader: {
     flexDirection: 'row',
@@ -292,8 +307,8 @@ const styles = StyleSheet.create({
   statTitle: {
     marginLeft: 8,
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    color: '#4A90E2',
   },
   moodScoreContainer: {
     flexDirection: 'row',
